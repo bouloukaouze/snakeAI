@@ -2,6 +2,7 @@ import random as rd
 
 import pygame
 from snake import *
+import numpy as np
 
 
 class Map:
@@ -28,10 +29,7 @@ class Map:
                     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
                     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
 
-        self.reward = [rd.randint(1, 18), rd.randint(1, 18)]
-        i = self.reward[0]
-        j = self.reward[1]
-        self.map[i][j] = 2
+        self.reward = []
 
         self.snake = snake
 
@@ -39,6 +37,9 @@ class Map:
             x = position[0]
             y = position[1]
             self.map[x][y] = 3
+        self.map[self.snake.head[0]][self.snake.head[1]] = 4
+        
+        self.put_new_reward()
 
     def put_new_reward(self):
 
@@ -48,17 +49,15 @@ class Map:
                 if self.map[i][j] == 0:
                     available_cases.append((i, j))
 
-        new_reward = rd.randint(0, len(available_cases))
-        i = available_cases[new_reward][0]
-        j = available_cases[new_reward][0]
+        i = available_cases[rd.randint(0, len(available_cases)-1)][0]
+        j = available_cases[rd.randint(0, len(available_cases)-1)][1]
         while self.reward == [i, j]:
-            new_reward = rd.randint(0, len(available_cases))
-            i = available_cases[new_reward][0]
-            j = available_cases[new_reward][0]
+            i = available_cases[rd.randint(0, len(available_cases)-1)][0]
+            j = available_cases[rd.randint(0, len(available_cases)-1)][1]
+
 
         self.reward = [i, j]
-        print(self.reward)
-        self.map[i][j] = 2
+        self.map[i][j] = -1
 
     def move_snake(self):
 
@@ -68,22 +67,35 @@ class Map:
             self.put_new_reward()
             self.snake.eat()
 
-        head_x = self.snake.head[0]
-        head_y = self.snake.head[1]
-        if self.map[head_x][head_y] == 1 \
-                or self.map[head_x][head_y] == 3:
-            self.snake.die()
+        if self.snake.length > 1:
+            head_x = self.snake.head[0]
+            head_y = self.snake.head[1]
+            if self.map[head_x][head_y] == 1 \
+                    or self.snake.head in self.snake.positions[1:]:
+                self.snake.die()
+        else:
+            head_x = self.snake.head[0]
+            head_y = self.snake.head[1]
+            if self.map[head_x][head_y] == 1 \
+                    or self.map[head_x][head_y] == 3:
+                self.snake.die()
+
 
         for position in self.snake.positions:
-            x = position[0]
-            y = position[1]
-            self.map[x][y] = 3
+            if position != self.snake.head:
+                x = position[0]
+                y = position[1]
+                self.map[x][y] = 3
 
         for i in range(len(self.map)):
             for j in range(len(self.map[i])):
                 if not ([i, j] in self.snake.positions) \
-                        and self.map[i][j] == 3:
+                        and self.map[i][j] == 3 or self.map[i][j] == 4:
                     self.map[i][j] = 0
+        
+        self.map[self.snake.head[0]][self.snake.head[1]] = 4
+
+        
 
     def display(self, window):
 
@@ -103,9 +115,9 @@ class Map:
                 y = num_line * SPRITE_SIZE
                 if case == 1:
                     window.blit(wall, (x, y))
-                if case == 2:
+                if case == -1:
                     window.blit(food, (x, y))
-                if case == 3:
+                if case == 3 or case == 4:
                     window.blit(snake, (x, y))
                 num_case += 1
             num_line += 1

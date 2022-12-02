@@ -1,14 +1,24 @@
+from numpy.random import randint
+
 
 class Snake:
 
     def __init__(self):
-        self.length = 4
-        self.head = [10, 10]
-        self.tail = [10, 13]
-        self.positions = [self.head, [10, 11], [10, 12], self.tail]
-        self.grow = False
+        self.length = 1
+        self.head = [randint(2,18), randint(2,18)]
+        self.positions = [self.head]
         self.alive = True
-        self.direction = "left"
+        match randint(0,4):
+            case 0:
+                self.direction = 'left'
+            case 1:
+                self.direction = 'right'
+            case 2:
+                self.direction = 'up'
+            case 3:
+                self.direction = 'down'
+
+        self.grow = True
 
     def move_up(self):
         if self.grow:
